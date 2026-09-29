@@ -1,0 +1,26 @@
+[
+  {
+    "text": "All equipment checked and fine, no issues found.",
+    "safe": true,
+    "confidence": 94.72,
+    "timestamp": "2026-09-17T01:15:49.577644"
+  },
+  {
+    "text": "Worker without helmet detected in zone 3, immediate danger.",
+    "safe": false,
+    "confidence": 74.91,
+    "timestamp": "2026-09-17T01:18:55.961522"
+  },
+  {
+    "text": "All equipment checked and fine, no issues found.",
+    "safe": true,
+    "confidence": 94.72,
+    "timestamp": "2026-09-17T01:23:32.136549"
+  },
+  {
+    "text": "Worker without helmet detected in zone 3, immediate danger.",
+    "safe": false,
+    "confidence": 74.91,
+    "timestamp": "2026-09-17T01:23:54.311679"
+  }
+]

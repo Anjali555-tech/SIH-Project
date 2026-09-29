@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIH Safety Report Checker</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --safe-color: #10b981;
+            --danger-color: #ef4444;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 700px;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+
+        /* --- Sample Buttons --- */
+        .samples {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .sample-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 10px 14px;
+            background-color: transparent;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sample-btn:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        /* --- Textarea Wrapper --- */
+        .textarea-wrapper {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 16px 50px 30px 16px;
+            background-color: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 130px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        textarea::placeholder {
+            color: #64748b;
+        }
+
+        /* --- Voice Button (inside textarea) --- */
+        .voice-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--border-color);
+            border: none;
+            color: var(--text-main);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-btn:hover {
+            background-color: var(--accent-color);
+        }
+
+        .voice-btn.listening {
+            background-color: var(--danger-color);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+
+        /* --- Char Counter --- */
+        .char-count {
+            position: absolute;
+            bottom: 8px;
+            right: 14px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* --- Submit Button --- */
+        button[type="submit"] {
+            width: 100%;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button[type="submit"]:hover:not(:disabled) {
+            background-color: var(--accent-hover);
+        }
+
+        button[type="submit"]:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        button[type="submit"]:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* --- Spinner --- */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- Result Box --- */
+        .result-box {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.15rem;
+            font-weight: 600;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .result-box.safe {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--safe-color);
+            border: 1px solid var(--safe-color);
+        }
+
+        .result-box.danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+        }
+
+        .confidence {
+            font-size: 0.9rem;
+            font-weight: 400;
+            opacity: 0.85;
+            margin-top: 8px;
+        }
+
+        /* --- History Section --- */
+        .history-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .history-header h3 {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .clear-history {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 5px;
+        }
+
+        .clear-history:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .history-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px 14px;
+            background-color: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            border-left: 3px solid var(--text-muted);
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-item.safe { border-left-color: var(--safe-color); }
+        .history-item.danger { border-left-color: var(--danger-color); }
+
+        .history-text {
+            flex: 1;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .history-time {
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dashboard-link {
+    display: block;
+    text-align: center;
+    color: var(--accent-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.dashboard-link:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: var(--accent-color);
+}
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🛡️ Safety Report Checker</h1>
+        <p class="subtitle">Type, speak, or pick a sample report to analyze.</p>
+        <a href="/dashboard" class="dashboard-link">📊 View Dashboard</a>
+        <!-- Feature 1: Sample Buttons -->
+        <div class="samples">
+            <button type="button" class="sample-btn" onclick="fillSample('All equipment checked and fine, no issues found.')">
+                ✅ Safe Sample
+            </button>
+            <button type="button" class="sample-btn" onclick="fillSample('Worker without helmet detected in zone 3, immediate danger.')">
+                🚨 Danger Sample
+            </button>
+        </div>
+
+        <form action="/predict" method="POST" id="reportForm">
+            <div class="textarea-wrapper">
+                <textarea 
+                    name="report" 
+                    id="reportInput"
+                    placeholder="e.g., All equipment checked and fine..."
+                    required>{{ report_text if report_text else '' }}</textarea>
+                
+                <!-- Feature 5: Voice Input Button -->
+                <button type="button" class="voice-btn" id="voiceBtn" title="Speak your report">
+                    🎤
+                </button>
+                
+                <!-- Feature 2 (bonus): Char counter -->
+                <div class="char-count"><span id="charCount">0</span> chars</div>
+            </div>
+
+            <!-- Feature 2: Submit button with loading spinner -->
+            <button type="submit" id="submitBtn">
+                <span id="btnText">Check Report</span>
+            </button>
+        </form>
+
+        <!-- Feature 3: Result with confidence -->
+        {% if prediction %}
+            <div id="resultBox" class="result-box" data-prediction="{{ prediction }}">
+                {{ prediction }}
+                {% if confidence %}
+                    <div class="confidence">Confidence: {{ confidence }}%</div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Feature 4: History -->
+        <div class="history-section" id="historySection" style="display:none;">
+            <div class="history-header">
+                <h3>📜 Recent Reports</h3>
+                <button class="clear-history" onclick="clearHistory()">Clear</button>
+            </div>
+            <ul class="history-list" id="historyList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // FEATURE 1: Sample Buttons
+        // ==========================================
+        function fillSample(text) {
+            const input = document.getElementById('reportInput');
+            input.value = text;
+            input.dispatchEvent(new Event('input')); // Trigger char counter
+            input.focus();
+        }
+
+        // ==========================================
+        // FEATURE 2: Loading Spinner + Char Counter
+        // ==========================================
+        const form = document.getElementById('reportForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const reportInput = document.getElementById('reportInput');
+        const charCount = document.getElementById('charCount');
+
+        // Update character count on input
+        reportInput.addEventListener('input', () => {
+            charCount.textContent = reportInput.value.length;
+        });
+        // Initialize on page load
+        charCount.textContent = reportInput.value.length;
+
+        // Show spinner on form submit
+        form.addEventListener('submit', () => {
+            submitBtn.disabled = true;
+            btnText.innerHTML = '<span class="spinner"></span> Analyzing...';
+        });
+
+        // ==========================================
+        // FEATURE 5: Voice Input
+        // ==========================================
+        const voiceBtn = document.getElementById('voiceBtn');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            voiceBtn.style.display = 'none'; // Hide if not supported
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            voiceBtn.addEventListener('click', () => {
+                if (voiceBtn.classList.contains('listening')) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+
+            recognition.onstart = () => {
+                voiceBtn.classList.add('listening');
+                voiceBtn.textContent = '⏹';
+            };
+
+            recognition.onend = () => {
+                voiceBtn.classList.remove('listening');
+                voiceBtn.textContent = '🎤';
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                reportInput.value = (reportInput.value + ' ' + transcript).trim();
+                reportInput.dispatchEvent(new Event('input'));
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech error:', event.error);
+            };
+        }
+
+        // ==========================================
+        // FEATURE 3 + 4: Result Coloring + History
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const resultBox = document.getElementById('resultBox');
+            
+            if (resultBox) {
+                const predictionText = resultBox.getAttribute('data-prediction').toLowerCase();
+                const isSafe = predictionText.includes('safe') || 
+                               predictionText.includes('fine') || 
+                               predictionText.includes('no immediate');
+                
+                // Apply color class
+                resultBox.classList.add(isSafe ? 'safe' : 'danger');
+                
+                // Save to history
+                const inputText = reportInput.value.trim();
+                if (inputText) {
+                    saveToHistory(inputText, isSafe);
+                }
+            }
+            
+            renderHistory();
+        });
+
+        // ---- History Functions ----
+        function saveToHistory(text, isSafe) {
+            let history = JSON.parse(localStorage.getItem('reportHistory') || '[]');
+            history.unshift({
+                text: text.length > 60 ? text.substring(0, 60) + '...' : text,
+                safe: isSafe,
+                time: new Date().toLocaleString()
+            });
+            history = history.slice(0, 5); // Keep only last 5
+            localStorage.setItem('reportHistory', JSON.stringify(history));
+        }
+
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('reportHistory') || '[]');
+            const section = document.getElementById('historySection');
+            const list = document.getElementById('historyList');
+
+            if (history.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            list.innerHTML = history.map(item => `
+                <li class="history-item ${item.safe ? 'safe' : 'danger'}">
+                    <span class="history-text">${item.text}</span>
+                    <span class="history-time">${item.time.split(',')[1] || item.time}</span>
+                </li>
+            `).join('');
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('reportHistory');
+            renderHistory();
+        }
+    </script>
+
+</body>
+</html>
